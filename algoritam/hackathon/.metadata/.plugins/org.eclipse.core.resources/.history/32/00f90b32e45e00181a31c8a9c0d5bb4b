@@ -1,0 +1,16 @@
+import java.util.ArrayList;
+
+
+public class Main {
+
+	static ArrayList<Donor> donors;
+
+	public static void main(String[] args) {
+
+		donors = new ArrayList<>();
+
+		getDonors(donors,"donors.txt");
+
+	}
+
+}

@@ -1,0 +1,47 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.ArrayList;
+
+
+public class Main {
+
+	static ArrayList<Donor> donors;
+
+	public static void main(String[] args) {
+
+		donors = new ArrayList<>();
+
+		getDonors(donors,"/Users/mpavlic/Downloads/donors.txt");
+
+		int i=0;
+		for (Donor donor : donors) {
+			i++;
+			System.out.println("Donor " + i + " ima id " + donor.id);
+		}
+
+	}
+
+	private static void getDonors(ArrayList<Donor> donors, String inputPath) {
+
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(inputPath));
+		    String line;
+		    while ((line = reader.readLine()) != null) {
+		    	Donor newDonor = new Donor();
+		    	newDonor.setParameters(line);
+		    	donors.add(newDonor);
+
+		    }
+		    reader.close();
+		}
+		catch (Exception e) {
+		    System.err.format("Exception occurred trying to read '%s'.", inputPath);
+		    e.printStackTrace();
+		    System.exit(1);
+		}
+
+		return;
+
+	}
+
+}

@@ -1,0 +1,340 @@
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+
+public class Main {
+
+	static ArrayList<Donor> allDonors;
+	static ArrayList<Donor> availableDonors;
+	static ArrayList<Integer> IDs;
+	static String[] bloodTypes = {"OM", "OP", "AM", "AP", "BM", "BP", "ABM", "ABP"};
+	static int[] minimum = {38,115,46,100,38,23,8,16};
+	static int[] optimum = {58,177,71,155,60,36,13,26};
+	static int[] maximum = {78,240,96,210,82,50,18,36};
+	static int[] consumption = {35,105,42,91,35,21,7,14};
+	static int[] currentLevels = {50,130,60,150,50,30,8,20};
+
+	public static void main(String[] args) {
+		if(args[0].equals("0")) {
+			System.out.println("Pripremamo koje hocemo iz ulaza.");
+
+			IDs = new ArrayList<>();
+
+			allDonors = new ArrayList<>();
+
+			getDonors(allDonors,"/Users/markopavlic/Downloads/donors.txt");
+
+			int sum=0;
+
+			for (int i = 0; i < optimum.length; i++) {
+				availableDonors = new ArrayList<>();
+				getAvailableDonors(availableDonors, allDonors, bloodTypes[i],
+					maximum[i]-(currentLevels[i]-consumption[i]));
+				setPercentage(availableDonors);
+				Collections.sort(availableDonors, new Comparator<Donor>(){
+					public int compare (Donor d1, Donor d2){
+						if( d1.getProbability() - d2.getProbability() < 0 ){
+							return 1;
+						} else if ( d1.getProbability() - d2.getProbability() > 0 ){
+							return -1;
+						} else return 0;
+					}
+				});
+				System.out.println("Min je "+minimum[i]+", max je "+maximum[i]+", optimum je "
+					+ optimum[i] +", potrosnja je "+consumption[i] + ", a trenutno "+currentLevels[i]);
+				int N = getNumberOfWantedDonors(availableDonors,
+					minimum[i],optimum[i], maximum[i],consumption[i],currentLevels[i]);
+				System.out.println("Za krvnu grupu "+bloodTypes[i].toString()+" zelimo "+ N+" ljudi pitat.");
+				for (int j = 0; j < N; j++) {
+					IDs.add(availableDonors.get(j).getId());
+				}
+				sum+=N;
+			}
+
+			PrintWriter writer = null;
+			try {
+				writer = new PrintWriter("/Users/markopavlic/Downloads/izlaz.txt", "UTF-8");
+				} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+				}
+			for (int i = 0; i < IDs.size(); i++) {
+				writer.print(IDs.get(i));
+				if(i!=IDs.size()-1) writer.print(",");
+			}
+			writer.close();
+
+			writer = null;
+			try {
+				writer = new PrintWriter("/Users/markopavlic/Downloads/kolikoSamPoslao.txt", "UTF-8");
+				} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+				}
+			writer.print(sum);
+			writer.close();
+
+			try {
+				writer = new PrintWriter("/Users/markopavlic/Downloads/current.txt", "UTF-8");
+				} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+				}
+			for (int i = 0; i < currentLevels.length; i++) {
+				writer.print(currentLevels[i]);
+				if(i!=currentLevels.length-1) writer.print(",");
+			}
+			writer.close();
+
+		} else {
+
+			try {
+				BufferedReader reader = new BufferedReader(new FileReader("/Users/markopavlic/Downloads/current.txt"));
+			    String line;
+			    line=reader.readLine();
+			    String[] stringer = line.split(",");
+			    for (int i = 0; i < stringer.length; i++) {
+					currentLevels[i]=Integer.valueOf(stringer[i]);
+					System.out.println(currentLevels[i]);
+				}
+			    reader.close();
+			}
+			catch (Exception e) {
+			    System.err.format("Exception occurred trying to read input.");
+			    e.printStackTrace();
+			    System.exit(1);
+			}
+
+			int poslaoSam=0;
+			try {
+				BufferedReader reader = new BufferedReader(new FileReader("/Users/markopavlic/Downloads/kolikoSamPoslao.txt"));
+			    String line;
+			    line=reader.readLine();
+			    poslaoSam=Integer.valueOf(line);
+			    reader.close();
+			}
+			catch (Exception e) {
+			    System.err.format("Exception occurred trying to read input.");
+			    e.printStackTrace();
+			    System.exit(1);
+			}
+
+			allDonors = new ArrayList<>();
+			int nrOfMade[] = {0,0,0,0,0,0,0,0};
+			getDonors(allDonors,"/Users/markopavlic/Downloads/donors.txt");
+			String line;
+			BufferedReader reader=null;
+			try {
+				reader = new BufferedReader(new FileReader("/Users/markopavlic/Downloads/evaluation_494.txt"));
+				//String line;
+				line=reader.readLine();
+				String lines[] = line.split(",");
+				for (Donor donor : allDonors) {
+					int finder=1;
+					for (int i=poslaoSam;i<lines.length;i++) {
+						if(donor.getId().equals(Integer.valueOf(lines[i]))){
+							finder=0;
+							donor.setDaysPassed(0);
+							donor.setProbability(0);
+							if(donor.getBloodType().toString().equals("OM")){
+								nrOfMade[0]++;
+							} else if (donor.getBloodType().toString().equals("OP")){
+								nrOfMade[1]++;
+							} else if (donor.getBloodType().toString().equals("AM")){
+								nrOfMade[2]++;
+							} else if (donor.getBloodType().toString().equals("AP")){
+								nrOfMade[3]++;
+							} else if (donor.getBloodType().toString().equals("BM")){
+								nrOfMade[4]++;
+							} else if (donor.getBloodType().toString().equals("BP")){
+								nrOfMade[5]++;
+							} else if (donor.getBloodType().toString().equals("ABM")){
+								nrOfMade[6]++;
+							} else if (donor.getBloodType().toString().equals("ABP")){
+								nrOfMade[7]++;
+							}
+						}
+					}
+					if(finder==1){
+						donor.setDaysPassed(donor.getDaysPassed()+7);
+						donor.setFreq(donor.getFreq()*360/367);
+					}
+				}
+				for (int i = 0; i < nrOfMade.length; i++) {
+					System.out.println("Za "+i+". se odazvalo "+nrOfMade[i]);
+					currentLevels[i]=currentLevels[i]-consumption[i]+nrOfMade[i];
+				}
+				System.out.println(line);
+				while ((line = reader.readLine()) != null) {
+					Donor newDonor = new Donor();
+					newDonor.setParameters(line);
+		    	//donors.add(newDonor);
+
+				}
+				reader.close();
+			} catch (Exception e) {
+				System.err.format("Exception occurred trying to read eval");
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			PrintWriter writer=null;
+			try {
+				writer = new PrintWriter("/Users/markopavlic/Downloads/currentLevelsSpremiUSljIteracijiKogaSaljemo.txt", "UTF-8");
+				} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+				}
+			for (int i = 0; i < currentLevels.length; i++) {
+				writer.print(currentLevels[i]);
+				if(i!=currentLevels.length-1) writer.print(",");
+			}
+			writer.close();
+
+			try {
+				writer = new PrintWriter("/Users/markopavlic/Downloads/donors.txt", "UTF-8");
+				} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+				}
+			writer.print("nes\n");
+			for (int i = 0; i < allDonors.size(); i++) {
+				Donor donor = allDonors.get(i);
+				writer.print(donor.getId()+","+donor.getFreq()+","+donor.getDaysPassed()+",");
+				if(donor.getBloodType().toString().equals("OM")){
+					writer.print("0-");
+				} else if (donor.getBloodType().toString().equals("OP")){
+					writer.print("0+");
+				} else if (donor.getBloodType().toString().equals("AM")){
+					writer.print("A-");
+				} else if (donor.getBloodType().toString().equals("AP")){
+					writer.print("A+");
+				} else if (donor.getBloodType().toString().equals("BP")){
+					writer.print("B+");
+				} else if (donor.getBloodType().toString().equals("BM")){
+					writer.print("B-");
+				} else if (donor.getBloodType().toString().equals("ABP")){
+					writer.print("AB+");
+				} else if (donor.getBloodType().toString().equals("ABM")){
+					writer.print("AB-");
+				}
+						writer.print(","+donor.getSex().toString()+
+						","+donor.getDistance()+"\n");
+			}
+			writer.close();
+
+		}
+
+	}
+
+	private static void setPercentage(ArrayList<Donor> availableDonors) {
+		//fuzzy logic
+		for (Donor donor : availableDonors) {
+			float probability=0;
+			if(donor.getSex().toString().equals("M")) probability =  (float)(donor.getFreq()/4.0);
+			else probability =  (float)(donor.getFreq()/3.0);
+			if(donor.distance<5) donor.setProbability((float) (probability));
+			else if (donor.distance>=5 && donor.distance<10) donor.setProbability((float) (probability));
+			else if (donor.distance>=10 && donor.distance<20) donor.setProbability((float) (probability));
+			else if (donor.distance>=20 && donor.distance<40) donor.setProbability((float) (probability));
+			else if (donor.distance>=40 && donor.distance<80) donor.setProbability((float) (probability));
+			else if (donor.distance>=80 && donor.getDaysPassed()>365) donor.setProbability((float) (probability*1.3));
+		}
+	}
+
+	private static int getNumberOfWantedDonors(ArrayList<Donor> availableDonors, int min,
+			int opt, int max, int consumption, int currentLevel) {
+		return goldenSectionSearch(availableDonors, opt-(currentLevel-consumption),
+				max-(currentLevel-consumption));
+	}
+
+	private static int goldenSectionSearch(ArrayList<Donor> availableDonors,int min, int max) {
+		System.out.println("Min i max su "+min+","+max);
+		float a=min;
+		float b=max;
+		float c=0;
+		float d=0;
+		float k =(float) ((Math.sqrt(5)-1)/2.0);
+		float fc=0;
+		float fd=0;
+		float e=2;
+		float collectivePercentage = 0;
+		int i=0;
+		for (int j=0;j<availableDonors.size();j++) {
+			Donor donor = availableDonors.get(i);
+			System.out.println("Vjerojatnost "+donor.getProbability());
+			collectivePercentage+=donor.getProbability();
+			i++;
+		}
+		collectivePercentage/=i;
+		min/=collectivePercentage;
+		max/=collectivePercentage;
+		System.out.println("Collective percentage je " + collectivePercentage+" od "+i+" ljudi");
+		c=b-k*(b-a);
+		d=a-k*(b-a);
+		fc=(float) Math.abs(collectivePercentage*c - min);
+		fd=(float) Math.abs(collectivePercentage*d - min);
+		while((b-a)>e){
+			if(fc>fd){
+				b=d;
+				d=c;
+				c=b-k*(b-a);
+				fd=fc;
+				fc=(float) Math.abs(collectivePercentage*c - min);
+			} else {
+				a=c;
+				c=d;
+				d=a+k*(b-a);
+				fc=fd;
+				fd=(float) Math.abs(collectivePercentage*d - min);
+			}
+		}
+		return (int)((a+b)/2);
+	}
+
+	private static void getAvailableDonors(ArrayList<Donor> availableDonors,
+			ArrayList<Donor> allDonors, String bloodType, int maxNumber) {
+		int i=0;
+		for (Donor donor : allDonors) {
+			if(bloodType.equals(donor.getBloodType().toString())){
+				if( (donor.getSex().toString().equals("M") && donor.getDaysPassed()>=90)
+						|| ( donor.getSex().toString().equals("Z") && donor.getDaysPassed()>=120 ) ){
+					Donor newDonor = new Donor(donor);
+					availableDonors.add(newDonor);
+				}
+			}
+		}
+		return;
+	}
+
+	private static void getDonors(ArrayList<Donor> donors, String inputPath) {
+
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(inputPath));
+		    String line;
+		    reader.readLine();
+		    while ((line = reader.readLine()) != null) {
+		    	Donor newDonor = new Donor();
+		    	newDonor.setParameters(line);
+		    	donors.add(newDonor);
+
+		    }
+		    reader.close();
+		}
+		catch (Exception e) {
+		    System.err.format("Exception occurred trying to read '%s'.", inputPath);
+		    e.printStackTrace();
+		    System.exit(1);
+		}
+
+		return;
+
+	}
+
+}

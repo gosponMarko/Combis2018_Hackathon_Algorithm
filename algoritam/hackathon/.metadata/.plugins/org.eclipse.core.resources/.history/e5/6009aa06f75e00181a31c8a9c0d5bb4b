@@ -1,0 +1,96 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.ArrayList;
+
+
+public class Main {
+
+	static ArrayList<Donor> allDonors;
+	static ArrayList<Donor> availableDonors;
+	static String[] bloodTypes = {"OM", "OP", "AM", "AP", "BM", "BP", "ABM", "ABP"};
+	static int[] minimum = {38,115,46,100,38,23,8,16};
+	static int[] optimum = {58,177,71,155,60,36,13,26};
+	static int[] maximum = {78,240,96,210,82,50,18,36};
+	static int[] consumption = {35,105,42,91,35,21,7,1};
+	static int[] currentLevels = {50,130,60,150,50,30,8,20};
+
+	public static void main(String[] args) {
+
+		allDonors = new ArrayList<>();
+
+		getDonors(allDonors,"/Users/markopavlic/Downloads/donors.txt");
+
+		for (int i = 0; i < optimum.length; i++) {
+			availableDonors = new ArrayList<>();
+			getAvailableDonors(availableDonors, allDonors, bloodTypes[i]);
+			setPercentage(availableDonors);
+			int N = getNumberOfWantedDonors(availableDonors,
+					minimum[i],optimum[i], maximum[i],consumption[i],currentLevels[i]);
+		}
+
+	}
+
+	private static void setPercentage(ArrayList<Donor> availableDonors) {
+		//fuzzy logic
+		for (Donor donor : availableDonors) {
+			float probability =  (float)(donor.getFreq()/4.0);
+			if(donor.distance<5) donor.setProbability(probability);
+			else if (donor.distance>=5 && donor.distance<10) donor.setProbability((float) (probability*0.9));
+			else if (donor.distance>=10 && donor.distance<20) donor.setProbability((float) (probability*0.75));
+			else if (donor.distance>=20 && donor.distance<40) donor.setProbability((float) (probability*0.55));
+			else if (donor.distance>=40 && donor.distance<80) donor.setProbability((float) (probability*0.38));
+			else if (donor.distance>=80 && donor.distance<160) donor.setProbability((float) (probability*0.15));
+			else donor.setProbability((float) (probability*0.01));
+		}
+	}
+
+	private static int getNumberOfWantedDonors(ArrayList<Donor> availableDonors, int min,
+			int opt, int max, int consumption, int currentLevel) {
+		return goldenSectionSearch(availableDonors, opt-(currentLevel-consumption),
+				max-(currentLevel-consumption));
+	}
+
+	private static int goldenSectionSearch(ArrayList<Donor> availableDonors,int min, int max) {
+
+		return 0;
+	}
+
+	private static void getAvailableDonors(ArrayList<Donor> availableDonors,
+			ArrayList<Donor> allDonors, String bloodType) {
+		for (Donor donor : allDonors) {
+			if(bloodType.equals(donor.getBloodType().toString())){
+				if( (donor.getSex().toString().equals("M") && donor.getDaysPassed()<90)
+						|| ( donor.getSex().toString().equals("Z") && donor.getDaysPassed()<120 ) ){
+					Donor newDonor = new Donor(donor);
+					availableDonors.add(newDonor);
+				}
+			}
+		}
+		return;
+	}
+
+	private static void getDonors(ArrayList<Donor> donors, String inputPath) {
+
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(inputPath));
+		    String line;
+		    reader.readLine();
+		    while ((line = reader.readLine()) != null) {
+		    	Donor newDonor = new Donor();
+		    	newDonor.setParameters(line);
+		    	donors.add(newDonor);
+
+		    }
+		    reader.close();
+		}
+		catch (Exception e) {
+		    System.err.format("Exception occurred trying to read '%s'.", inputPath);
+		    e.printStackTrace();
+		    System.exit(1);
+		}
+
+		return;
+
+	}
+
+}

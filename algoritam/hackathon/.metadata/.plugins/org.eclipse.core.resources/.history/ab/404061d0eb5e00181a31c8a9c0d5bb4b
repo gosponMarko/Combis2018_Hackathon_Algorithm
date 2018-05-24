@@ -1,0 +1,49 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.ArrayList;
+
+
+public class Main {
+
+	static ArrayList<Donor> donors;
+	static int[] minimum = {38,115,46,100,38,23,8,16};
+	static int[] optimum = {58,177,71,155,60,36,13,26};
+	static int[] maximum = {78,240,96,210,82,50,18,36};
+	static int[] consumption = {35,105,42,91,35,21,7,1};
+	static int[] currentLevels = {50,130,60,150,50,30,8,20};
+
+	public static void main(String[] args) {
+
+		donors = new ArrayList<>();
+
+		getDonors(donors,"/Users/markopavlic/Downloads/donors.txt");
+
+
+
+	}
+
+	private static void getDonors(ArrayList<Donor> donors, String inputPath) {
+
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(inputPath));
+		    String line;
+		    reader.readLine();
+		    while ((line = reader.readLine()) != null) {
+		    	Donor newDonor = new Donor();
+		    	newDonor.setParameters(line);
+		    	donors.add(newDonor);
+
+		    }
+		    reader.close();
+		}
+		catch (Exception e) {
+		    System.err.format("Exception occurred trying to read '%s'.", inputPath);
+		    e.printStackTrace();
+		    System.exit(1);
+		}
+
+		return;
+
+	}
+
+}
